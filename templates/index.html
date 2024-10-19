@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Question Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="container mx-auto p-8 bg-white rounded-lg shadow-lg max-w-4xl">
+        <h1 class="text-3xl font-bold mb-6 text-center text-indigo-600">Interview Question Generator</h1>
+        <div class="mb-6">
+            <label for="job-description" class="block text-sm font-medium text-gray-700 mb-2">Job Description</label>
+            <textarea id="job-description" rows="5" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-indigo-500" placeholder="Enter the job description here..."></textarea>
+        </div>
+        <button id="generate-btn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300">Generate Questions</button>
+        <div id="loading" class="hidden mt-4 text-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+            <p class="mt-2 text-gray-600">Generating questions...</p>
+        </div>
+        <div id="questions-container" class="mt-8 hidden">
+            <h2 class="text-2xl font-semibold mb-4">Generated Questions</h2>
+            <div id="normal-questions" class="mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-green-600">Normal Questions</h3>
+                <ul class="space-y-4"></ul>
+            </div>
+            <div id="medium-questions" class="mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-yellow-600">Medium Questions</h3>
+                <ul class="space-y-4"></ul>
+            </div>
+            <div id="advanced-questions" class="mb-6">
+                <h3 class="text-xl font-semibold mb-2 text-red-600">Advanced Questions</h3>
+                <ul class="space-y-4"></ul>
+            </div>
+        </div>
+        <div id="error-message" class="hidden mt-4 text-red-600 text-center"></div>
+        <div class="mt-8 text-center text-sm text-gray-500">
+            Built by Muhammad Usman (ranausman@outlook.com)
+        </div>
+        <div id="stats" class="mt-4 text-center text-sm text-gray-500">
+            Total runs: <span id="total-runs">0</span> | Total questions generated: <span id="total-questions">0</span>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // Set the base URL for axios
+        axios.defaults.baseURL = window.location.origin + '/interviewai';
+
+        const generateBtn = document.getElementById('generate-btn');
+        const jobDescription = document.getElementById('job-description');
+        const questionsContainer = document.getElementById('questions-container');
+        const loading = document.getElementById('loading');
+
+        generateBtn.addEventListener('click', async () => {
+            if (!jobDescription.value.trim()) {
+                alert('Please enter a job description');
+                return;
+            }
+
+            loading.classList.remove('hidden');
+            questionsContainer.classList.add('hidden');
+            document.getElementById('error-message').classList.add('hidden');
+
+            try {
+                const response = await axios.post('/generate_questions', {
+                    job_description: jobDescription.value
+                });
+
+                const questions = response.data.questions;
+                const stats = response.data.stats;
+                displayQuestions(questions);
+                updateStats(stats);
+            } catch (error) {
+                console.error('Error generating questions:', error);
+                const errorMessage = error.response?.data?.error || 'An error occurred while generating questions. Please try again.';
+                const errorDetails = error.response?.data?.details || '';
+                document.getElementById('error-message').textContent = `${errorMessage} ${errorDetails}`;
+                document.getElementById('error-message').classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+            }
+        });
+
+        function displayQuestions(questions) {
+            questionsContainer.classList.remove('hidden');
+
+            const categories = ['normal', 'medium', 'advanced'];
+            categories.forEach(category => {
+                const container = document.getElementById(`${category}-questions`).querySelector('ul');
+                container.innerHTML = '';
+                questions[category].forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <button class="question-btn w-full text-left font-semibold text-indigo-600 focus:outline-none">
+                                ${index + 1}. ${item.question}
+                            </button>
+                            <div class="answer hidden mt-2">
+                                <p class="text-gray-700 font-medium mb-2">Evaluation Criteria:</p>
+                                <p class="text-gray-600 mb-4">${item.evaluation}</p>
+                                <p class="text-gray-700 font-medium mb-2">Sample Answer:</p>
+                                <p class="text-gray-600">${item.sampleAnswer}</p>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(li);
+                });
+            });
+
+            // Add click event listeners to toggle answers
+            document.querySelectorAll('.question-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const answer = btn.nextElementSibling;
+                    answer.classList.toggle('hidden');
+                });
+            });
+        }
+
+        function updateStats(stats) {
+            document.getElementById('total-runs').textContent = stats.total_runs;
+            document.getElementById('total-questions').textContent = stats.total_questions;
+        }
+
+        // Fetch initial stats when the page loads
+        async function fetchInitialStats() {
+            try {
+                const response = await axios.get('/stats');
+                updateStats(response.data);
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        fetchInitialStats();
+    </script>
+</body>
+</html>
