@@ -6,7 +6,7 @@ import re
 import traceback
 
 # Configure Google Generative AI
-GENAI_API_KEY = "AIzaSyDceI3mqdAoSIPkGpYgbttbuJ-YUwoLk3E"
+GENAI_API_KEY = "Gemini API key here"
 genai.configure(api_key=GENAI_API_KEY)
 
 # Configure Flask app
@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://usman.today", "http://92.113.25.143:5006"]}})
 
-app.secret_key = 'usmansrana'  # Make sure this is a strong, random key
+app.secret_key = 'anything here'  # Make sure this is a strong, random key
 
 # Set up the Generative AI model configuration
 generation_config = {
