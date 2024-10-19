@@ -12,7 +12,7 @@ genai.configure(api_key=GENAI_API_KEY)
 # Configure Flask app
 logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["https://usman.today", "http://92.113.25.143:5006"]}})
+CORS(app, resources={r"/*": {"origins": ["https://usman.today", "http://-----------:5006"]}})
 
 app.secret_key = 'anything here'  # Make sure this is a strong, random key
 
